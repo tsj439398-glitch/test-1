@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Realtime Counter</title>
+  </head>
+  <body>
+    <button id="btn" disabled>Count ++</button>
+    <h1 id="count">0</h1>
+    <p id="status">Menghubungkan...</p>
+
+    <script>
+      // Alamat backend WebSocket
+      const ws = new WebSocket("http://localhost:3000");
+
+      const btn = document.querySelector("#btn");
+      const count = document.querySelector("#count");
+      const status = document.querySelector("#status");
+
+      let number = 0;
+
+      ws.addEventListener("open", () => {
+        status.textContent = "Terhubung";
+        btn.disabled = false;
+      });
+
+      ws.addEventListener("message", (event) => {
+        const data = JSON.parse(event.data);
+
+        console.log(data);
+        if (data.type === "count") {
+          count.textContent = data.value;
+        }
+      });
+
+      ws.addEventListener("close", () => {
+        status.textContent = "Koneksi terputus";
+        btn.disabled = true;
+      });
+
+      ws.addEventListener("error", () => {
+        status.textContent = "Koneksi error";
+      });
+
+      btn.addEventListener("click", () => {
+        number += 1;
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(
+            JSON.stringify({
+              type: "increment",
+              value: number,
+            }),
+          );
+        }
+      });
+    </script>
+  </body>
+</html>
